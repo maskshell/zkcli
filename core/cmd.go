@@ -170,6 +170,13 @@ func (c *Cmd) deleteall() (err error) {
 	}
 	p = cleanPath(p)
 
+	c.deleteRecursive(p)
+	return
+}
+
+func (c *Cmd) deleteRecursive(p string) (err error) {
+	p = cleanPath(p)
+
 	children, _, err := c.Conn.Children(p)
 	if err != nil {
 		return
@@ -177,9 +184,24 @@ func (c *Cmd) deleteall() (err error) {
 
 	for _, child := range children {
 		path := fmt.Sprintf("%s/%s", p, child)
-		err = c.Conn.Delete(path, -1)
-		if err != nil {
-			return
+		grandChildren, _, serr := c.Conn.Children(path)
+		if serr != nil {
+			return serr
+		}
+
+		if len(grandChildren) > 0 {
+			for _, grandChild := range grandChildren {
+				grandPath := fmt.Sprintf("%s/%s", path, grandChild)
+				c.deleteRecursive(grandPath)
+				if serr != nil {
+					return serr
+				}
+			}
+		}
+
+		serr = c.Conn.Delete(path, -1)
+		if serr != nil {
+			return serr
 		}
 		fmt.Printf("Deleted %s\n", path)
 	}
