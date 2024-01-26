@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/c-bata/go-prompt"
-	"github.com/let-us-go/zkcli/core"
+	"github.com/maskshell/zkcli/core"
 	homedir "github.com/mitchellh/go-homedir"
 	"github.com/namsral/flag"
 )
@@ -15,7 +15,7 @@ import (
 var gitCommit = "unknown"
 var built = "unknown"
 
-const version = "0.4.0"
+const version = "0.5.0"
 
 func main() {
 	servers := flag.String("s", "127.0.0.1:2181", "Servers")

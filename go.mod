@@ -1,4 +1,4 @@
-module github.com/let-us-go/zkcli
+module github.com/maskshell/zkcli
 
 go 1.14
 

@@ -1,7 +1,6 @@
 # zkcli
 
-[![Build Status](https://github.com/let-us-go/zkcli/workflows/Go/badge.svg?branch=master)](https://travis-ci.org/let-us-go/zkcli)
-[![Go Report Card](https://goreportcard.com/badge/github.com/let-us-go/zkcli)](https://goreportcard.com/report/github.com/let-us-go/zkcli)
+[![Go Report Card](https://goreportcard.com/badge/github.com/maskshell/zkcli)](https://goreportcard.com/report/github.com/maskshell/zkcli)
 
 A interactive Zookeeper client.
 
@@ -12,6 +11,8 @@ A interactive Zookeeper client.
 
 ### Mac (Homebrew)
 
+For original edition from [@let-us-go](https://github.com/let-us-go/zkcli).
+
 ```
 brew tap let-us-go/zkcli
 brew install zkcli
@@ -20,7 +21,7 @@ brew install zkcli
 ### go install
 
 ```
-go install github.com/let-us-go/zkcli
+go install github.com/maskshell/zkcli@latest
 ```
 
 ### Build
@@ -29,7 +30,7 @@ go install github.com/let-us-go/zkcli
 make release-all
 ```
 
-Or [download a pre-built binary](https://github.com/let-us-go/zkcli/releases) for Linux or macOS/OSX.
+Or [download a pre-built binary](https://github.com/maskshell/zkcli/releases) for Linux or macOS/OSX.
 
 
 ## Usage
@@ -48,6 +49,7 @@ ls <path>
 create <path> [<data>]
 set <path> [<data>]
 delete <path>
+deleteall <path>
 connect <host:port>
 addauth <scheme> <auth>
 close
