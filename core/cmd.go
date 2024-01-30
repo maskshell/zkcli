@@ -3,10 +3,9 @@ package core
 import (
 	"errors"
 	"fmt"
+	"github.com/go-zookeeper/zk"
 	"os"
 	"strings"
-
-	"github.com/go-zookeeper/zk"
 )
 
 const flag int32 = 0
@@ -31,18 +30,88 @@ func NewCmd(name string, options []string, conn *zk.Conn, config *Config) *Cmd {
 	}
 }
 
-func ParseCmd(cmd string) (name string, options []string) {
-	args := make([]string, 0)
-	for _, cmd := range strings.Split(cmd, " ") {
-		if cmd != "" {
-			args = append(args, cmd)
+func ParseCmd(input string) (string, []string) {
+	var part1 string
+	var part2 []string
+
+	var temp string
+	var inQuotes bool
+
+	// Parse the string character by character
+	for i, r := range input {
+		c := string(r)
+
+		if c == "\"" {
+			if i > 0 && string(input[i-1]) == "\\" {
+				temp = temp[:len(temp)-1] + "\""
+			} else {
+				inQuotes = !inQuotes
+			}
+		} else if c == " " && !inQuotes {
+			if part1 == "" {
+				part1 = temp
+			} else {
+				part2 = append(part2, temp)
+			}
+			temp = ""
+		} else {
+			temp += c
 		}
 	}
-	if len(args) == 0 {
+
+	if temp != "" {
+		if part1 == "" {
+			part1 = temp
+		} else {
+			part2 = append(part2, temp)
+		}
+	}
+
+	// Process part1:
+	// If there are paired double quotes at the beginning and end of part1, remove them,
+	// and then, if there are double quotes escaped by backslashes, remove the backslashes.
+	if part1 != "" {
+		if part1[0] == '"' && part1[len(part1)-1] == '"' {
+			part1 = part1[1 : len(part1)-1]
+		}
+		part1 = strings.Replace(part1, `\"`, `"`, -1)
+	}
+
+	// Process all string elements in part2:
+	// If there are paired double quotes at the beginning and end of the element, remove them,
+	// and then, if there are double quotes escaped by backslashes, remove the backslashes.
+	for i, str := range part2 {
+		if str[0] == '"' && str[len(str)-1] == '"' {
+			part2[i] = str[1 : len(str)-1]
+		}
+		part2[i] = strings.Replace(part2[i], `\"`, `"`, -1)
+	}
+
+	return part1, part2
+}
+
+// ParseCmd4Cli
+// zk command parsing, cli simplified version
+func ParseCmd4Cli(cmd []string) (name string, options []string) {
+	if len(cmd) < 2 {
 		return
 	}
 
-	return args[0], args[1:]
+	return cmd[0], cmd[1:]
+}
+
+// CombineArgs
+// The input parameter is an array of string ([]string),
+// and the function combines the array elements into a string.
+// Each element string should be enclosed in a pair of double quotes, and the elements are separated by spaces.
+// In particular, if the string content of the array element contains double quotes,
+// then the double quotes should be replaced with the escape character "\"".
+func CombineArgs(args []string) string {
+	for i, str := range args {
+		str = strings.Replace(str, "\"", "\\\"", -1)
+		args[i] = "\"" + str + "\""
+	}
+	return strings.TrimSpace(strings.Join(args, " "))
 }
 
 func (c *Cmd) ls() (err error) {
@@ -157,7 +226,7 @@ func (c *Cmd) delete() (err error) {
 	return
 }
 
-func (c *Cmd) deleteall() (err error) {
+func (c *Cmd) deleteAll() (err error) {
 	err = c.checkConn()
 	if err != nil {
 		return
@@ -170,7 +239,10 @@ func (c *Cmd) deleteall() (err error) {
 	}
 	p = cleanPath(p)
 
-	c.deleteRecursive(p)
+	err = c.deleteRecursive(p)
+	if err != nil {
+		return err
+	}
 	return
 }
 
@@ -192,7 +264,10 @@ func (c *Cmd) deleteRecursive(p string) (err error) {
 		if len(grandChildren) > 0 {
 			for _, grandChild := range grandChildren {
 				grandPath := fmt.Sprintf("%s/%s", path, grandChild)
-				c.deleteRecursive(grandPath)
+				err := c.deleteRecursive(grandPath)
+				if err != nil {
+					return err
+				}
 				if serr != nil {
 					return serr
 				}
@@ -298,7 +373,7 @@ func (c *Cmd) run() (err error) {
 	case "delete":
 		return c.delete()
 	case "deleteall":
-		return c.deleteall()
+		return c.deleteAll()
 	case "close":
 		return c.close()
 	case "connect":

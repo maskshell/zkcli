@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.5.1] (2024-01-29)
+
+### Improve
+
+* In interactive mode, the value of the zk node supports strings containing spaces.
+
 ## [0.5.0] (2024-01-26)
 
 ### New Features

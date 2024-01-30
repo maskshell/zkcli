@@ -15,7 +15,7 @@ import (
 var gitCommit = "unknown"
 var built = "unknown"
 
-const version = "0.5.0"
+const version = "0.5.1"
 
 func main() {
 	servers := flag.String("s", "127.0.0.1:2181", "Servers")
@@ -52,7 +52,8 @@ func main() {
 	}
 	defer conn.Close()
 
-	name, options := core.ParseCmd(strings.Join(args, " "))
+	// Simplified process for command line mode, it will use ParseCmd4Cli to process args.
+	name, options := core.ParseCmd4Cli(args)
 	cmd := core.NewCmd(name, options, conn, config)
 	if len(args) > 0 {
 		cmd.ExitWhenErr = true
@@ -60,6 +61,8 @@ func main() {
 		return
 	}
 
+	// When no args, it will enter interactive mode.
+	// This will use ParseCmd to process input internally.
 	p := prompt.New(
 		core.GetExecutor(cmd),
 		core.GetCompleter(cmd),
